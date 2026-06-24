@@ -139,8 +139,7 @@ function applyModelCamera(model) {
         modelEl.setAttribute('max-camera-orbit', 'auto auto 200%');
     }
 
-    if (model.scale) modelEl.setAttribute('scale', model.scale);
-    else modelEl.removeAttribute('scale');
+    modelEl.setAttribute('scale', model.scale ?? '1 1 1');
 
     modelEl.setAttribute('camera-orbit', model.orbit);
     if (model.target && model.target !== 'auto') {
