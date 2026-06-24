@@ -162,7 +162,6 @@ function onModelLoad() {
     }
     updateAnimUI();
     applyModelCamera(currentModel);
-    if (modelEl.loaded) modelEl.updateFraming();
 }
 
 function setPlaying(playing) {
