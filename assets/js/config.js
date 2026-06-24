@@ -2,7 +2,7 @@ export const MODELS = [
     {
         id:      'spiderman',
         name:    'Spider-Man',
-        file:    './assets/model/spiderman_rigged.glb',
+        file:    './assets/model/spiderman_rigged.glb?v=2',
         size:    '1.7 MB',
         accent:  '#e84040',
         orbit:   '0deg 85deg 110%',
@@ -12,7 +12,7 @@ export const MODELS = [
     {
         id:      'rex',
         name:    'T-Rex',
-        file:    './assets/model/rex_animation.glb',
+        file:    './assets/model/rex_animation.glb?v=2',
         size:    '16 MB',
         accent:  '#4caf50',
         orbit:   '15deg 80deg 110%',
@@ -21,7 +21,7 @@ export const MODELS = [
     {
         id:      'deer',
         name:    'Deer',
-        file:    './assets/model/realistic_deer.glb',
+        file:    './assets/model/realistic_deer.glb?v=2',
         size:    '307 KB',
         accent:  '#c8941a',
         orbit:   '0deg 82deg 110%',
@@ -30,7 +30,7 @@ export const MODELS = [
     {
         id:      'drone',
         name:    'Mini Drone',
-        file:    './assets/model/mini_drone.glb',
+        file:    './assets/model/mini_drone.glb?v=2',
         size:    '155 KB',
         accent:  '#2196f3',
         orbit:   '35deg 70deg 110%',
@@ -39,7 +39,7 @@ export const MODELS = [
     {
         id:      'cow',
         name:    'Cow',
-        file:    './assets/model/cow.glb',
+        file:    './assets/model/cow.glb?v=2',
         size:    '7.8 MB',
         accent:  '#ff9800',
         orbit:   '0deg 80deg 110%',
@@ -48,7 +48,7 @@ export const MODELS = [
     {
         id:      'dancing-cow',
         name:    'Dancing Cow',
-        file:    './assets/model/dancing_cow.glb',
+        file:    './assets/model/dancing_cow.glb?v=2',
         size:    '2.2 MB',
         accent:  '#ff5722',
         orbit:   '0deg 80deg 110%',
@@ -57,7 +57,7 @@ export const MODELS = [
     {
         id:      'dancing-cow-v1',
         name:    'Dancing Cow v1',
-        file:    './assets/model/dancing_cow-v1.glb',
+        file:    './assets/model/dancing_cow-v1.glb?v=2',
         size:    '2.3 MB',
         accent:  '#9c27b0',
         orbit:   '0deg 80deg 110%',
