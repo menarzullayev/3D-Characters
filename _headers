@@ -3,16 +3,16 @@
   Access-Control-Allow-Origin: *
 
 /assets/js/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: no-cache
 
 /assets/css/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: no-cache
 
 /assets/favicon.svg
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=604800
 
 /assets/og-image.png
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=604800
 
 /*
   X-Content-Type-Options: nosniff
