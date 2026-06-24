@@ -5,8 +5,9 @@ export const MODELS = [
         file:    './assets/model/spiderman_rigged.glb',
         size:    '3 MB',
         accent:  '#e84040',
-        orbit:   '0deg 85deg 2.5m',
-        target:  '0m 0.9m 0m',
+        orbit:   '0deg 85deg 110%',
+        target:  'auto',
+        scale:   '100 100 100',
     },
     {
         id:      'rex',

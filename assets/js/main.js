@@ -97,8 +97,7 @@ function loadModel(model) {
     hideError();
     setActiveThumb(model.id);
     modelEl.setAttribute('src', model.file);
-    modelEl.cameraOrbit  = model.orbit;
-    modelEl.cameraTarget = model.target;
+    applyModelCamera(model);
     announce(`Loading ${model.name}`);
 }
 
@@ -113,11 +112,16 @@ function applyModelCamera(model) {
         modelEl.setAttribute('min-camera-orbit', 'auto auto 50%');
         modelEl.setAttribute('max-camera-orbit', 'auto auto 200%');
     }
-    modelEl.cameraOrbit = model.orbit;
+
+    if (model.scale) modelEl.setAttribute('scale', model.scale);
+    else modelEl.removeAttribute('scale');
+
+    modelEl.setAttribute('camera-orbit', model.orbit);
     if (model.target && model.target !== 'auto') {
-        modelEl.cameraTarget = model.target;
+        modelEl.setAttribute('camera-target', model.target);
     } else {
-        modelEl.updateFraming();
+        modelEl.removeAttribute('camera-target');
+        if (modelEl.loaded) modelEl.updateFraming();
     }
 }
 
@@ -153,9 +157,12 @@ function onModelLoad() {
     if (animations.length > 0) {
         modelEl.animationName = animations[0];
         if (isPlaying) modelEl.play({ repetitions: Infinity });
+    } else {
+        modelEl.removeAttribute('animation-name');
     }
     updateAnimUI();
     applyModelCamera(currentModel);
+    if (modelEl.loaded) modelEl.updateFraming();
 }
 
 function setPlaying(playing) {
@@ -262,6 +269,7 @@ function init() {
     bindModelEvents();
     setAutoRotate(true);
     updateAnimUI();
+    applyModelCamera(currentModel);
     showLoading(`Loading ${currentModel.name}…`);
 
     if (modelEl.loaded) {
