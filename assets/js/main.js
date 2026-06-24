@@ -121,8 +121,9 @@ function loadModel(model) {
     hideError();
     setActiveThumb(model.id);
     modelEl.setAttribute('poster', makePoster(model.accent));
-    modelEl.setAttribute('src', model.file);
+    modelEl.setAttribute('src', '');
     applyModelCamera(model);
+    requestAnimationFrame(() => modelEl.setAttribute('src', model.file));
     savePrefs({ lastModel: model.id });
     announce(`Loading ${model.name}`);
 }
