@@ -12,8 +12,8 @@ export const MODELS = [
     {
         id:      'rex',
         name:    'T-Rex',
-        file:    './assets/model/rex_animation.glb?v=3',
-        size:    '1.6 MB',
+        file:    './assets/model/rex_animation.glb?v=4',
+        size:    '2.9 MB',
         accent:  '#4caf50',
         orbit:   '15deg 80deg 110%',
         target:  '0m 0.6m 0m',
@@ -39,8 +39,8 @@ export const MODELS = [
     {
         id:      'cow',
         name:    'Cow',
-        file:    './assets/model/cow.glb?v=3',
-        size:    '936 KB',
+        file:    './assets/model/cow.glb?v=4',
+        size:    '1.7 MB',
         accent:  '#ff9800',
         orbit:   '0deg 80deg 110%',
         target:  '0m 0.5m 0m',

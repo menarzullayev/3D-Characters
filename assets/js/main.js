@@ -304,7 +304,11 @@ function bindEvents() {
 function bindModelEvents() {
     modelEl.addEventListener('progress', e => {
         const pct = Math.round(e.detail.totalProgress * 100);
-        if (pct > 0 && pct < 100) loadingText.textContent = `Loading ${currentModel.name}… ${pct}%`;
+        const elapsed = Math.round(performance.now() - loadStartTime);
+        if (pct > 0 && pct < 100) {
+            loadingText.textContent = `Loading ${currentModel.name}… ${pct}%`;
+            if (pct % 25 === 0) console.info(`[3D] ${currentModel.name} ${pct}% (${elapsed}ms)`);
+        }
     });
 
     modelEl.addEventListener('load', () => {
@@ -314,9 +318,22 @@ function bindModelEvents() {
         announce(`${currentModel.name} loaded`);
     });
 
-    modelEl.addEventListener('error', () => {
-        console.warn(`[3D-Characters] ✗ ${currentModel.name} failed to load`);
+    modelEl.addEventListener('error', e => {
+        const elapsed = Math.round(performance.now() - loadStartTime);
+        const src = modelEl.getAttribute('src') ?? '—';
+        const detail = e.detail ?? {};
+        console.group(`[3D] ✗ ${currentModel.name} FAILED (${elapsed}ms)`);
+        console.error('src:', src);
+        console.error('error type:', detail.type ?? 'unknown');
+        console.error('sourceError:', detail.sourceError ?? detail.error ?? e);
+        console.error('online:', navigator.onLine);
+        console.error('WebGL:', !!document.createElement('canvas').getContext('webgl2'));
+        console.groupEnd();
         showError();
+    });
+
+    modelEl.addEventListener('model-visibility', e => {
+        console.info(`[3D] visibility changed: visible=${e.detail.visible} model=${currentModel.name}`);
     });
 }
 
