@@ -1,0 +1,11 @@
+{
+  "name": "3d-characters",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test assets/js/*.test.js",
+    "scss": "npx sass assets/css/style.scss assets/css/style.min.css --style=compressed --source-map",
+    "serve": "python3 -m http.server 8040",
+    "deploy": "npx wrangler pages deploy . --project-name=3d-characters --branch=main --exclude test-models.html"
+  }
+}
