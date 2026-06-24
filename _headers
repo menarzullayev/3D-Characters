@@ -1,5 +1,6 @@
 /assets/model/*
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 
 /assets/js/*
   Cache-Control: public, max-age=86400
