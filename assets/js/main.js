@@ -104,8 +104,21 @@ function loadModel(model) {
 
 // ── Camera ────────────────────────────────────────────────────────────────
 function applyModelCamera(model) {
-    modelEl.cameraOrbit  = model.orbit;
-    modelEl.cameraTarget = model.target;
+    const radiusPart = model.orbit.split(' ')[2] ?? '';
+    const isMeters = radiusPart.endsWith('m') && !radiusPart.endsWith('%');
+    if (isMeters) {
+        modelEl.setAttribute('min-camera-orbit', 'auto auto 0.1m');
+        modelEl.setAttribute('max-camera-orbit', 'auto auto 50m');
+    } else {
+        modelEl.setAttribute('min-camera-orbit', 'auto auto 50%');
+        modelEl.setAttribute('max-camera-orbit', 'auto auto 200%');
+    }
+    modelEl.cameraOrbit = model.orbit;
+    if (model.target && model.target !== 'auto') {
+        modelEl.cameraTarget = model.target;
+    } else {
+        modelEl.updateFraming();
+    }
 }
 
 function resetCamera() {
