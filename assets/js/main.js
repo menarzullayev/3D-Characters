@@ -86,6 +86,12 @@ function setActiveThumb(modelId) {
     });
 }
 
+// ── Poster (lazy loading placeholder) ────────────────────────────────────
+function makePoster(accent) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${accent}" stop-opacity="0.25"/><stop offset="100%" stop-color="#0a0d14" stop-opacity="1"/></radialGradient></defs><rect width="400" height="400" fill="#0a0d14"/><rect width="400" height="400" fill="url(%23g)"/></svg>`;
+    return `data:image/svg+xml,${svg}`;
+}
+
 // ── Model loading ─────────────────────────────────────────────────────────
 function loadModel(model) {
     if (model.id === currentModel.id) return;
@@ -96,6 +102,7 @@ function loadModel(model) {
     showLoading(`Loading ${model.name}…`);
     hideError();
     setActiveThumb(model.id);
+    modelEl.setAttribute('poster', makePoster(model.accent));
     modelEl.setAttribute('src', model.file);
     applyModelCamera(model);
     announce(`Loading ${model.name}`);
@@ -268,6 +275,7 @@ function init() {
     bindModelEvents();
     setAutoRotate(true);
     updateAnimUI();
+    modelEl.setAttribute('poster', makePoster(currentModel.accent));
     applyModelCamera(currentModel);
     showLoading(`Loading ${currentModel.name}…`);
 
