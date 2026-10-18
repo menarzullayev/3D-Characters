@@ -2,56 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Interactive 3D character viewer — animated models with auto-detected animations, dark glassmorphism UI.">
-    <title>3D Characters — Interactive Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0614">
+    <meta name="description" content="A neon gallery of animated 3D characters. Open any model, play its animations, view it in AR on your phone and share a direct link.">
+    <title>3D Characters — Neon Gallery</title>
 
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 
     <meta property="og:type"         content="website">
-    <meta property="og:title"        content="3D Characters — Interactive Viewer">
-    <meta property="og:description"  content="7 animated 3D characters — Spider-Man, T-Rex, Deer and more. Switch models, control animations, take photos.">
+    <meta property="og:title"        content="3D Characters — Neon Gallery">
+    <meta property="og:description"  content="11 animated 3D characters — Spider-Man, T-Rex, Fox and more. Play animations, try AR, share a link.">
     <meta property="og:image"        content="https://3dchar.bugvector.uz/assets/og-image.png">
     <meta property="og:image:width"  content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:url"          content="https://3dchar.bugvector.uz">
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="3D Characters — Interactive Viewer">
-    <meta name="twitter:description" content="7 animated 3D characters. Switch models, control animations, take photos.">
+    <meta name="twitter:title"       content="3D Characters — Neon Gallery">
+    <meta name="twitter:description" content="11 animated 3D characters. Play animations, try AR, share a link.">
     <meta name="twitter:image"       content="https://3dchar.bugvector.uz/assets/og-image.png">
 
-    <link rel="preload" href="./assets/model/spiderman_rigged.glb?v=2" as="fetch" crossorigin="anonymous">
     <link rel="stylesheet" href="./assets/css/style.min.css">
 </head>
 <body>
     <a class="skip-link" href="#mainContent">Skip to content</a>
 
-    <model-viewer
-        id="model"
-        src="./assets/model/spiderman_rigged.glb?v=2"
-        alt="Interactive 3D character model"
-        camera-controls
-        touch-action="pan-y"
-        interaction-prompt="auto"
-        shadow-intensity="1.0"
-        exposure="1.3"
-        environment-image="neutral"
-        camera-orbit="0deg 85deg 110%"
-        min-camera-orbit="auto auto 50%"
-        max-camera-orbit="auto auto 200%"
-        scale="100 100 100"
-        autoplay
-        loading="eager"
-        reveal="auto"
-        auto-rotate
-        auto-rotate-delay="3000"
-        rotation-per-second="8deg"
-    ></model-viewer>
+    <main id="mainContent">
+        <!-- ── Gallery ─────────────────────────────────────────────────── -->
+        <section id="gallery" class="gallery" aria-labelledby="galleryTitle">
+            <header class="gallery__head">
+                <a class="gallery__author" href="https://github.com/menarzullayev" target="_blank" rel="noopener noreferrer">menarzullayev</a>
+                <h1 id="galleryTitle" class="gallery__title">3D <span>Characters</span></h1>
+                <p class="gallery__sub">Pick a character. Animate it, view it in AR, share the link.</p>
+            </header>
+            <ul id="grid" class="grid" aria-label="3D models"></ul>
+            <footer class="gallery__foot">
+                Models are licensed under CC BY 4.0 — authors are credited on every model page.
+            </footer>
+        </section>
 
-    <div id="loadingOverlay" class="overlay overlay--loading" aria-live="polite" aria-busy="true">
+        <!-- ── Viewer ──────────────────────────────────────────────────── -->
+        <section id="viewer" class="viewer hidden" aria-label="Model viewer">
+            <model-viewer
+                id="model"
+                alt="Interactive 3D character model"
+                camera-controls
+                touch-action="pan-y"
+                interaction-prompt="auto"
+                shadow-intensity="1.0"
+                exposure="1.2"
+                environment-image="neutral"
+                camera-orbit="0deg 85deg 110%"
+                min-camera-orbit="auto auto 50%"
+                max-camera-orbit="auto auto 200%"
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                ar-scale="auto"
+                autoplay
+                reveal="auto"
+                auto-rotate
+                auto-rotate-delay="3000"
+                rotation-per-second="8deg"
+            ></model-viewer>
+
+            <header class="dock dock--top" aria-label="Viewer controls">
+                <button type="button" id="backBtn" class="btn btn--icon" aria-label="Back to gallery">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    <span class="btn__label">Gallery</span>
+                </button>
+
+                <div class="dock__model">
+                    <button type="button" id="prevModel" class="step-btn" aria-label="Previous model">&#8592;</button>
+                    <strong id="modelName" class="dock__title">—</strong>
+                    <button type="button" id="nextModel" class="step-btn" aria-label="Next model">&#8594;</button>
+                </div>
+
+                <div class="anim-info" aria-label="Current animation">
+                    <button type="button" id="animPrev" class="step-btn" aria-label="Previous animation" disabled>&#8592;</button>
+                    <span id="animName" class="anim-name">—</span>
+                    <span id="animCount" class="anim-count"></span>
+                    <button type="button" id="animNext" class="step-btn" aria-label="Next animation" disabled>&#8594;</button>
+                </div>
+
+                <div class="dock__actions">
+                    <button type="button" id="playPauseBtn" class="btn btn--primary btn--icon" aria-label="Play animation" aria-pressed="true" disabled>
+                        <svg class="icon-pause" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+                        <svg class="icon-play"  width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span class="btn__label">Pause</span>
+                    </button>
+                    <button type="button" id="arBtn" class="btn btn--icon btn--ar hidden" aria-label="View in your space (AR)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+                        <span class="btn__label">AR</span>
+                    </button>
+                    <button type="button" id="autoRotateBtn" class="btn btn--icon" aria-pressed="true" aria-label="Auto-rotate on">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
+                        <span class="btn__label">Rotate</span>
+                    </button>
+                    <button type="button" id="resetBtn" class="btn btn--icon" aria-label="Reset view">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 9 9 9"/></svg>
+                        <span class="btn__label">Reset</span>
+                    </button>
+                    <button type="button" id="photoBtn" class="btn btn--icon" aria-label="Take photo">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span class="btn__label">Photo</span>
+                    </button>
+                    <button type="button" id="shareBtn" class="btn btn--icon" aria-label="Share link to this model">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+                        <span class="btn__label">Share</span>
+                    </button>
+                    <button type="button" id="infoBtn" class="btn btn--icon" aria-pressed="false" aria-controls="infoPanel" aria-label="Show model info">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span class="btn__label">Info</span>
+                    </button>
+                </div>
+            </header>
+
+            <aside id="infoPanel" class="info hidden" aria-label="Model info">
+                <h2 id="infoName" class="info__name"></h2>
+                <p id="infoDesc" class="info__desc"></p>
+                <dl class="info__stats">
+                    <div><dt>Triangles</dt><dd id="infoTris"></dd></div>
+                    <div><dt>File size</dt><dd id="infoSize"></dd></div>
+                    <div><dt>Animations</dt><dd id="infoAnims"></dd></div>
+                </dl>
+                <p class="info__credit">
+                    By <span id="infoAuthor"></span><br>
+                    <a id="infoLicense" href="#" target="_blank" rel="noopener noreferrer"></a> ·
+                    <a id="infoSource" href="#" target="_blank" rel="noopener noreferrer">Source</a>
+                </p>
+            </aside>
+        </section>
+    </main>
+
+    <div id="loadingOverlay" class="overlay overlay--loading hidden" aria-live="polite" aria-busy="false">
         <div class="overlay__card">
             <div class="spinner" role="status" aria-label="Loading model"></div>
-            <p id="loadingText">Loading Spider-Man…</p>
+            <p id="loadingText">Loading…</p>
         </div>
     </div>
 
@@ -59,49 +144,11 @@
         <div class="overlay__card">
             <p class="overlay__title">Model failed to load</p>
             <p class="overlay__text">Check your connection or try a different browser with WebGL enabled.</p>
-            <button type="button" id="retryBtn" class="btn btn--primary">Retry</button>
+            <div class="overlay__actions">
+                <button type="button" id="retryBtn" class="btn btn--primary">Retry</button>
+                <button type="button" id="errorBackBtn" class="btn">Gallery</button>
+            </div>
         </div>
-    </div>
-
-    <div class="app-chrome" id="mainContent">
-        <header class="dock dock--top" aria-label="Viewer controls">
-            <div class="dock__brand">
-                <a class="dock__author" href="https://github.com/menarzullayev" target="_blank" rel="noopener noreferrer">menarzullayev</a>
-                <strong class="dock__title">3D Characters</strong>
-            </div>
-
-            <div class="anim-info" aria-label="Current animation">
-                <button type="button" id="animPrev" class="anim-cycle-btn" aria-label="Previous animation" disabled>&#8592;</button>
-                <span id="animName" class="anim-name">—</span>
-                <span id="animCount" class="anim-count"></span>
-                <button type="button" id="animNext" class="anim-cycle-btn" aria-label="Next animation" disabled>&#8594;</button>
-            </div>
-
-            <div class="dock__actions">
-                <button type="button" id="playPauseBtn" class="btn btn--primary btn--icon" aria-label="Play animation" aria-pressed="true" disabled>
-                    <svg class="icon-pause" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
-                    <svg class="icon-play"  width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <span class="btn__label">Pause</span>
-                </button>
-                <button type="button" id="autoRotateBtn" class="btn btn--icon" aria-pressed="true" aria-label="Auto-rotate on">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
-                    <span class="btn__label">Rotate</span>
-                </button>
-                <button type="button" id="resetBtn" class="btn btn--icon" aria-label="Reset view">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 9 9 9"/></svg>
-                    <span class="btn__label">Reset</span>
-                </button>
-                <button type="button" id="photoBtn" class="btn btn--icon" aria-label="Take photo">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    <span class="btn__label">Photo</span>
-                </button>
-            </div>
-        </header>
-
-        <nav class="dock dock--bottom" aria-label="Model selection">
-            <p class="thumbs-label">Characters</p>
-            <div id="thumbnails" class="thumbnails" role="listbox" aria-label="Select a 3D model"></div>
-        </nav>
     </div>
 
     <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
