@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "test": "node --test assets/js/*.test.js",
-    "scss": "npx sass assets/css/style.scss assets/css/style.min.css --style=compressed --source-map",
+    "scss": "npx --yes sass@1.105.2 assets/css/style.scss assets/css/style.min.css --style=compressed --source-map",
     "serve": "python3 -m http.server 8040",
-    "deploy": "npx wrangler pages deploy . --project-name=3d-characters --branch=main --exclude test-models.html"
+    "deploy": "npx wrangler pages deploy . --project-name=3d-characters --branch=main --exclude test-models.html",
+    "models": "node scripts/glb-info.js assets/model/*.glb"
   }
 }

@@ -1,12 +1,24 @@
-import { MODELS, DEFAULT_MODEL_ID } from './config.js';
+import { MODELS, thumbFor } from './config.js';
 import { loadPrefs, savePrefs } from './storage.js';
+import { parseHash, hashFor, stepModel } from './router.js';
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const modelEl        = document.getElementById('model');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const loadingText    = document.getElementById('loadingText');
 const errorOverlay   = document.getElementById('errorOverlay');
-const thumbnailsEl   = document.getElementById('thumbnails');
+const galleryEl      = document.getElementById('gallery');
+const viewerEl       = document.getElementById('viewer');
+const gridEl         = document.getElementById('grid');
+const backBtn        = document.getElementById('backBtn');
+const errorBackBtn   = document.getElementById('errorBackBtn');
+const prevModelBtn   = document.getElementById('prevModel');
+const nextModelBtn   = document.getElementById('nextModel');
+const modelNameEl    = document.getElementById('modelName');
+const arBtn          = document.getElementById('arBtn');
+const shareBtn       = document.getElementById('shareBtn');
+const infoBtn        = document.getElementById('infoBtn');
+const infoPanel      = document.getElementById('infoPanel');
 const playPauseBtn   = document.getElementById('playPauseBtn');
 const autoRotateBtn  = document.getElementById('autoRotateBtn');
 const resetBtn       = document.getElementById('resetBtn');
@@ -19,9 +31,9 @@ const animNextBtn    = document.getElementById('animNext');
 const liveRegion     = document.getElementById('liveRegion');
 
 // ── State ─────────────────────────────────────────────────────────────────
-const prefs         = loadPrefs();
-const startId       = MODELS.find(m => m.id === prefs.lastModel) ? prefs.lastModel : DEFAULT_MODEL_ID;
-let currentModel    = MODELS.find(m => m.id === startId);
+let currentModel    = null;
+let loadedModelId   = null;
+let modelReady      = false;
 let animations      = [];
 let currentAnimIdx  = 0;
 let isPlaying       = true;
@@ -70,36 +82,43 @@ function hideError() {
     errorOverlay.classList.add('hidden');
 }
 
-// ── Thumbnails ────────────────────────────────────────────────────────────
-function buildThumbnails() {
-    thumbnailsEl.innerHTML = '';
+// ── Gallery grid ──────────────────────────────────────────────────────────
+function buildGrid() {
+    gridEl.innerHTML = '';
     MODELS.forEach((model, idx) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'thumb-card';
-        btn.dataset.modelId = model.id;
-        btn.dataset.idx = String(idx);
-        btn.setAttribute('aria-label', `Load ${model.name}`);
-        btn.setAttribute('tabindex', model.id === currentModel.id ? '0' : '-1');
-        btn.style.setProperty('--accent', model.accent);
-        btn.innerHTML = `
-            <span class="thumb-card__bar"></span>
-            <span class="thumb-card__name">${model.name}</span>
-            <span class="thumb-card__size">${model.size}</span>
-        `;
-        if (model.id === currentModel.id) btn.classList.add('thumb-card--active');
-        btn.addEventListener('click', () => loadModel(model));
-        thumbnailsEl.appendChild(btn);
-    });
-}
+        const li = document.createElement('li');
+        const a  = document.createElement('a');
+        a.className = 'card';
+        a.href = hashFor(model);
+        a.style.setProperty('--accent', model.accent);
+        a.style.setProperty('--i', String(idx));
+        a.setAttribute('aria-label', `Open ${model.name}`);
 
-function setActiveThumb(modelId) {
-    const cards = [...document.querySelectorAll('.thumb-card')];
-    cards.forEach(card => {
-        const active = card.dataset.modelId === modelId;
-        card.classList.toggle('thumb-card--active', active);
-        card.setAttribute('tabindex', active ? '0' : '-1');
-        if (active) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const img = document.createElement('img');
+        img.className = 'card__img';
+        img.src = thumbFor(model);
+        img.alt = '';
+        img.loading = 'lazy';
+        img.width = 480;
+        img.height = 360;
+        img.addEventListener('error', () => img.remove(), { once: true });
+
+        const body = document.createElement('span');
+        body.className = 'card__body';
+        const name = document.createElement('span');
+        name.className = 'card__name';
+        name.textContent = model.name;
+        const tag = document.createElement('span');
+        tag.className = 'card__tag';
+        tag.textContent = model.tagline;
+        const meta = document.createElement('span');
+        meta.className = 'card__meta';
+        meta.textContent = `${model.size} · ${model.tris.toLocaleString('en-US')} tris`;
+        body.append(name, tag, meta);
+
+        a.append(img, body);
+        li.appendChild(a);
+        gridEl.appendChild(li);
     });
 }
 
@@ -111,20 +130,29 @@ export function makePoster(accent) {
 
 // ── Model loading ─────────────────────────────────────────────────────────
 function loadModel(model) {
-    if (model.id === currentModel.id) return;
     currentModel = model;
+    modelNameEl.textContent = model.name;
+    renderInfo(model);
+    document.title = `${model.name} — 3D Characters`;
+    viewerEl.style.setProperty('--accent', model.accent);
+    if (loadedModelId === model.id) {
+        if (!modelReady) showLoading(`Loading ${model.name}…`);
+        applyModelCamera(model);
+        return;
+    }
+    loadedModelId = model.id;
+    modelReady = false;
     animations = [];
     currentAnimIdx = 0;
     updateAnimUI();
+    arBtn.classList.add('hidden');
     loadStartTime = performance.now();
     showLoading(`Loading ${model.name}…`);
     hideError();
-    setActiveThumb(model.id);
     modelEl.setAttribute('poster', makePoster(model.accent));
     modelEl.setAttribute('src', '');
     applyModelCamera(model);
     requestAnimationFrame(() => modelEl.setAttribute('src', model.file));
-    savePrefs({ lastModel: model.id });
     announce(`Loading ${model.name}`);
 }
 
@@ -249,26 +277,84 @@ async function takePhoto() {
     }
 }
 
-// ── Keyboard navigation (thumbnail strip) ────────────────────────────────
-function bindThumbKeyboard() {
-    thumbnailsEl.addEventListener('keydown', e => {
-        const cards = [...thumbnailsEl.querySelectorAll('.thumb-card')];
-        const focused = document.activeElement;
-        const idx = cards.indexOf(focused);
-        if (idx === -1) return;
+// ── Info panel ────────────────────────────────────────────────────────────
+function renderInfo(model) {
+    document.getElementById('infoName').textContent   = model.name;
+    document.getElementById('infoDesc').textContent   = model.desc;
+    document.getElementById('infoTris').textContent   = model.tris.toLocaleString('en-US');
+    document.getElementById('infoSize').textContent   = model.size;
+    document.getElementById('infoAuthor').textContent = model.author;
+    const lic = document.getElementById('infoLicense');
+    lic.textContent = model.license;
+    lic.href = model.licenseUrl;
+    document.getElementById('infoSource').href = model.source;
+}
 
-        let next = -1;
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  next = (idx + 1) % cards.length;
-        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    next = (idx - 1 + cards.length) % cards.length;
-        if (e.key === 'Home') next = 0;
-        if (e.key === 'End')  next = cards.length - 1;
+function setInfoOpen(open) {
+    infoPanel.classList.toggle('hidden', !open);
+    infoBtn.setAttribute('aria-pressed', String(open));
+    infoBtn.setAttribute('aria-label', open ? 'Hide model info' : 'Show model info');
+    savePrefs({ infoOpen: open });
+}
 
-        if (next !== -1) {
-            e.preventDefault();
-            cards.forEach((c, i) => c.setAttribute('tabindex', i === next ? '0' : '-1'));
-            cards[next].focus();
+// ── AR ────────────────────────────────────────────────────────────────────
+function updateArButton() {
+    arBtn.classList.toggle('hidden', !modelEl.canActivateAR === true);
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────
+async function shareModel() {
+    const url = new URL(hashFor(currentModel), location.href.split('#')[0]).href;
+    try {
+        if (navigator.share) {
+            await navigator.share({ title: `${currentModel.name} — 3D Characters`, url });
+            return;
         }
-    });
+        await navigator.clipboard.writeText(url);
+        showToast('Link copied');
+        announce('Link copied');
+    } catch (err) {
+        if (err?.name === 'AbortError') return;
+        showToast(url);
+    }
+}
+
+// ── Routing (#<model-id>) ─────────────────────────────────────────────────
+function showGallery() {
+    viewerEl.classList.add('hidden');
+    galleryEl.classList.remove('hidden');
+    document.body.classList.remove('is-viewing');
+    document.title = '3D Characters — Neon Gallery';
+    hideLoading();
+    hideError();
+    modelEl.pause?.();
+    currentModel = null;
+    window.scrollTo(0, 0);
+}
+
+function showViewer(model) {
+    galleryEl.classList.add('hidden');
+    viewerEl.classList.remove('hidden');
+    document.body.classList.add('is-viewing');
+    loadModel(model);
+    if (modelReady && animations.length && isPlaying) modelEl.play({ repetitions: Infinity });
+    window.scrollTo(0, 0);
+}
+
+function route() {
+    const model = parseHash(location.hash, MODELS);
+    if (model) showViewer(model);
+    else showGallery();
+}
+
+function goTo(model) {
+    location.hash = hashFor(model);
+}
+
+function goGallery() {
+    // Keep history clean: drop the hash entirely instead of leaving a bare "#".
+    history.pushState(null, '', location.pathname + location.search);
+    route();
 }
 
 // ── Events ────────────────────────────────────────────────────────────────
@@ -279,15 +365,20 @@ function bindEvents() {
         setAutoRotate(autoRotateBtn.getAttribute('aria-pressed') !== 'true');
     });
 
-    resetBtn.addEventListener('click', () => {
-        resetCamera();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    resetBtn.addEventListener('click', () => resetCamera());
 
     photoBtn?.addEventListener('click', takePhoto);
+    shareBtn.addEventListener('click', shareModel);
+    infoBtn.addEventListener('click', () => setInfoOpen(infoPanel.classList.contains('hidden')));
+    arBtn.addEventListener('click', () => modelEl.activateAR());
 
     animPrevBtn?.addEventListener('click', () => cycleAnim(-1));
     animNextBtn?.addEventListener('click', () => cycleAnim(1));
+
+    backBtn.addEventListener('click', goGallery);
+    errorBackBtn.addEventListener('click', goGallery);
+    prevModelBtn.addEventListener('click', () => goTo(stepModel(MODELS, currentModel, -1)));
+    nextModelBtn.addEventListener('click', () => goTo(stepModel(MODELS, currentModel, 1)));
 
     retryBtn?.addEventListener('click', () => {
         hideError();
@@ -298,7 +389,15 @@ function bindEvents() {
         requestAnimationFrame(() => modelEl.setAttribute('src', src));
     });
 
-    bindThumbKeyboard();
+    window.addEventListener('hashchange', route);
+    window.addEventListener('popstate', route);
+
+    window.addEventListener('keydown', e => {
+        if (!currentModel || e.altKey || e.ctrlKey || e.metaKey) return;
+        if (e.key === 'Escape') goGallery();
+        else if (e.key === 'ArrowRight') nextModelBtn.click();
+        else if (e.key === 'ArrowLeft')  prevModelBtn.click();
+    });
 }
 
 function bindModelEvents() {
@@ -312,6 +411,9 @@ function bindModelEvents() {
     });
 
     modelEl.addEventListener('load', () => {
+        if (!currentModel || !modelEl.getAttribute('src')) return;
+        modelReady = true;
+        updateArButton();
         hideLoading();
         hideError();
         onModelLoad();
@@ -329,6 +431,7 @@ function bindModelEvents() {
         console.error('online:', navigator.onLine);
         console.error('WebGL:', !!document.createElement('canvas').getContext('webgl2'));
         console.groupEnd();
+        loadedModelId = null;
         showError();
     });
 
@@ -340,20 +443,13 @@ function bindModelEvents() {
 // ── Init ──────────────────────────────────────────────────────────────────
 function init() {
     if (!modelEl) return;
-    loadStartTime = performance.now();
-    buildThumbnails();
+    buildGrid();
     bindEvents();
     bindModelEvents();
     setAutoRotate(true);
     updateAnimUI();
-    modelEl.setAttribute('poster', makePoster(currentModel.accent));
-    applyModelCamera(currentModel);
-    showLoading(`Loading ${currentModel.name}…`);
-
-    if (modelEl.loaded) {
-        hideLoading();
-        onModelLoad();
-    }
+    setInfoOpen(loadPrefs().infoOpen === true);
+    route();
 }
 
 init();
